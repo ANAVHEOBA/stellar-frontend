@@ -37,8 +37,8 @@ export function CreatePaymentRequest({ rate, onClose, onSuccess }: CreatePayment
       });
 
       setPaymentInfo({
-        address: response.data.payment.paymentAddress!,
-        memo: response.data.payment.memo
+        address: response.data.payment.stellarPaymentAddress,
+        memo: response.data.payment.stellarMemo
       });
       
       onSuccess();
