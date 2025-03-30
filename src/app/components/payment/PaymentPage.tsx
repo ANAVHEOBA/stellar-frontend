@@ -68,14 +68,14 @@ export function PaymentPage({ paymentId }: PaymentPageProps) {
             <div className="space-y-6">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="font-medium">
+                  <span className="text-gray-800 font-medium">Amount:</span>
+                  <span className="text-gray-900 font-semibold">
                     {payment.sourceAmount} {payment.sourceAsset}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Expires:</span>
-                  <span className="font-medium">
+                  <span className="text-gray-800 font-medium">Expires:</span>
+                  <span className="text-gray-900 font-semibold">
                     {new Date(payment.expiresAt).toLocaleString()}
                   </span>
                 </div>

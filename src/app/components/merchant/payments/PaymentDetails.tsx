@@ -16,6 +16,7 @@ export function PaymentDetails({ paymentId, onClose }: PaymentDetailsProps) {
   const [payment, setPayment] = useState<Payment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState<string>('');
 
   useEffect(() => {
     if (token && paymentId) {
@@ -24,7 +25,7 @@ export function PaymentDetails({ paymentId, onClose }: PaymentDetailsProps) {
   }, [token, paymentId]);
 
   const fetchPaymentDetails = async () => {
-    if (!token) return; // Early return if no token
+    if (!token) return;
 
     try {
       setLoading(true);
@@ -39,16 +40,13 @@ export function PaymentDetails({ paymentId, onClose }: PaymentDetailsProps) {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(`${field} copied!`);
+      setTimeout(() => setCopySuccess(''), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
     }
   };
 
@@ -73,45 +71,71 @@ export function PaymentDetails({ paymentId, onClose }: PaymentDetailsProps) {
         ) : error ? (
           <div className="text-red-600 text-center py-4">{error}</div>
         ) : payment ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                <span className={`mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                <h4 className="text-sm font-semibold text-gray-700">Status</h4>
+                <span className={`mt-1 px-2 inline-flex text-xs leading-5 font-bold rounded-full ${
+                  payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
                   {payment.status}
                 </span>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Created</h4>
+                <h4 className="text-sm font-semibold text-gray-700">Created</h4>
                 <p className="mt-1 text-sm text-gray-900">{formatDate(payment.createdAt)}</p>
               </div>
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Transaction Details</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-2">Stellar Transaction Details</h4>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div>
+                  <p className="text-sm text-gray-500">Payment Address</p>
+                  <div className="flex items-center">
+                    <p className="text-sm font-mono text-gray-900">{payment.stellarPaymentAddress}</p>
+                    <button
+                      onClick={() => copyToClipboard(payment.stellarPaymentAddress, 'Address')}
+                      className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Memo</p>
+                  <p className="text-sm font-mono text-gray-900">{payment.stellarMemo}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="text-sm font-medium text-gray-500 mb-2">Payment Information</h4>
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Source Amount</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900">
                       {payment.sourceAmount} {payment.sourceAsset}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Destination Amount</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900">
                       {payment.destinationAmount} {payment.destinationAsset}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Exchange Rate</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900">
                       1 {payment.sourceAsset} = {payment.exchangeRate} {payment.destinationAsset}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Expires</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900">
                       {formatDate(payment.expiresAt)}
                     </p>
                   </div>
@@ -121,22 +145,37 @@ export function PaymentDetails({ paymentId, onClose }: PaymentDetailsProps) {
 
             <div className="border-t border-gray-200 pt-4">
               <h4 className="text-sm font-medium text-gray-500 mb-2">Customer Information</h4>
-              <p className="text-sm text-gray-900">{payment.customerEmail}</p>
-            </div>
-
-            <div className="border-t border-gray-200 pt-4">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Reference IDs</h4>
               <div className="space-y-2">
-                <div>
-                  <p className="text-sm text-gray-500">Payment ID</p>
-                  <p className="text-sm font-mono text-gray-900">{payment._id}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Rate ID</p>
-                  <p className="text-sm font-mono text-gray-900">{payment.rateId}</p>
-                </div>
+                <p className="text-sm text-gray-900">{payment.consumerEmail}</p>
+                {payment.consumerWalletAddress && (
+                  <div>
+                    <p className="text-sm text-gray-500">Wallet Address</p>
+                    <p className="text-sm font-mono text-gray-900">{payment.consumerWalletAddress}</p>
+                  </div>
+                )}
               </div>
             </div>
+
+            {payment.paymentLink && (
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Payment Link</h4>
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm font-mono text-gray-900 truncate">{payment.paymentLink}</p>
+                  <button
+                    onClick={() => copyToClipboard(payment.paymentLink!, 'Payment link')}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {copySuccess && (
+              <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md">
+                {copySuccess}
+              </div>
+            )}
           </div>
         ) : null}
       </div>

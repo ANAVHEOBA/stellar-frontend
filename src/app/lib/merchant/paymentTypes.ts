@@ -9,9 +9,12 @@ export interface Payment {
   destinationAmount: string;
   destinationAsset: string;
   exchangeRate: number;
-  customerEmail: string;
-  paymentAddress?: string;  // Stellar address for customer to pay to
-  memo?: string;           // Optional memo for the payment
+  stellarPaymentAddress: string;
+  stellarMemo: string;
+  merchantWalletAddress: string;
+  consumerEmail: string;
+  consumerWalletAddress?: string;
+  paymentLink?: string;
   expiresAt: string;
   createdAt: string;
   updatedAt: string;
